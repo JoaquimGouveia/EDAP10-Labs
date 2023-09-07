@@ -36,10 +36,13 @@ public class ClockMain {
             switch (choice) {
                 case SET_TIME:
                     monitor.setClockTime(LocalTime.of(h, m, s));
+                    break;
                 case SET_ALARM:
                     monitor.setAlarmTime(LocalTime.of(h, m, s));
+                    break;
                 case TOGGLE_ALARM:
                     monitor.toggleAlarm();
+                    break;
             }
             System.out.println("choice=" + choice + " h=" + h + " m=" + m + " s=" + s);
         }
