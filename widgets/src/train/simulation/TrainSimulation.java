@@ -9,13 +9,13 @@ public class TrainSimulation {
         TrainView view = new TrainView();
         TrainMonitor monitor = new TrainMonitor();
 
-        //for (int i = 0; i < 20; i++) {
-          //  TrainThread train = new TrainThread(view, monitor);
-            //Thread thread = new Thread(train);
-            //thread.start();
-        //}
+        for (int i = 0; i < 20; i++) {
+            TrainThread train = new TrainThread(view, monitor);
+            Thread thread = new Thread(train);
+            thread.start();
+        }
 
-        TrainThread train1 = new TrainThread(view, monitor);
+        /*TrainThread train1 = new TrainThread(view, monitor);
         TrainThread train2 = new TrainThread(view, monitor);
         TrainThread train3 = new TrainThread(view, monitor);
         TrainThread train4 = new TrainThread(view, monitor);
@@ -77,7 +77,7 @@ public class TrainSimulation {
         thread18.start();
         thread19.start();
         thread20.start();
-
+        */
         
     }
 
