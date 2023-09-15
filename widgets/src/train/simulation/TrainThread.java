@@ -16,8 +16,8 @@ public class TrainThread implements Runnable{
     }
 
     // Make sure to call enterSegment even when creating the train
-    private void createTrain(Integer noOfTrains) throws InterruptedException {
-        for (int i = 0; i < noOfTrains; i++ ) {
+    private void createTrain(Integer noOfSegments) throws InterruptedException {
+        for (int i = 0; i < noOfSegments; i++ ) {
             Segment segment = route.next();
             monitor.enterSegment(segment);
             segment.enter();

@@ -2,7 +2,8 @@ package factory.simulation;
 
 import factory.model.Conveyor;
 import factory.model.Tool;
-import factory.model.Widget;
+import factory.simulation.thread.PaintThread;
+import factory.simulation.thread.PressThread;
 
 public class FactoryController {
     
@@ -14,11 +15,16 @@ public class FactoryController {
         Tool press = factory.getPressTool();
         Tool paint = factory.getPaintTool();
 
-        while (true) {
-            press.waitFor(Widget.GREEN_BLOB);
-            conveyor.off();
-            press.performAction();
-            conveyor.on();
-        }
+        FactoryMonitor monitor = new FactoryMonitor(conveyor);
+
+        PaintThread paintThread = new PaintThread(monitor, paint);
+        PressThread pressThread = new PressThread(monitor, press);
+
+        Thread paintMachine = new Thread(paintThread);
+        Thread pressMachine = new Thread(pressThread);
+
+        paintMachine.start();
+        pressMachine.start();
+
     }
 }
