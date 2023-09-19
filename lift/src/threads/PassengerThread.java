@@ -23,7 +23,13 @@ public class PassengerThread implements Runnable {
                 this.fromFloor = passenger.getStartFloor();
                 this.toFloor = passenger.getDestinationFloor();
                 passenger.begin();
-                liftMonitor.handlePassenger(fromFloor, toFloor, passenger);
+                liftMonitor.handleEnter(fromFloor, toFloor);
+                passenger.enterLift();
+                liftMonitor.decrementEnteringExitingCount();
+                liftMonitor.handleExit(toFloor);
+                passenger.exitLift();
+                liftMonitor.decrementEnteringExitingCount();
+                //liftMonitor.handlePassenger(fromFloor, toFloor, passenger);
                 passenger.end();
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block

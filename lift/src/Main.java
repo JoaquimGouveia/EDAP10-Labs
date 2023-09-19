@@ -1,5 +1,4 @@
 import lift.LiftView;
-import lift.Passenger;
 import threads.LiftThread;
 import threads.LiftMonitor;
 import threads.PassengerThread;
