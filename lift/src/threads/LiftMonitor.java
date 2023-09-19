@@ -27,7 +27,10 @@ public class LiftMonitor {
 
     public synchronized void handleFloor(int floor, LiftView lift) throws InterruptedException {
         this.currentFloor = floor;
-        while ((this.toEnter[floor] != 0 && !isFull) || this.toExit[floor] != 0) {
+        while (!anyWaiting()) {
+            wait();
+        }
+        while ((this.toEnter[floor] != 0 && !isFull) || this.toExit[floor] != 0) { // or anyWaiting() will make the lift wait with open doors.
             if (isMoving) {
                 this.isMoving = !this.isMoving;
                 lift.openDoors(floor);
@@ -43,6 +46,7 @@ public class LiftMonitor {
 
     public synchronized void handlePassenger(int fromFloor, int toFloor, Passenger passenger) throws InterruptedException {
         this.toEnter[fromFloor] = this.toEnter[fromFloor] + 1;
+        notifyAll();
         while (this.currentFloor != fromFloor || this.isMoving || this.isFull) {
             wait();
         }
@@ -50,7 +54,6 @@ public class LiftMonitor {
         this.toEnter[fromFloor] = this.toEnter[fromFloor] - 1;
         this.toExit[toFloor] = this.toExit[toFloor] + 1;
         passenger.enterLift();
-        System.out.println("jag är inne");
         notifyAll();
         while (this.currentFloor != toFloor || this.isMoving) {
             wait();
@@ -68,6 +71,15 @@ public class LiftMonitor {
             this.currentDirection = -1;
         }
         return currentDirection;
+    }
+
+    public synchronized boolean anyWaiting() {
+        for (int i = 0; i < this.toEnter.length; i++) {
+            if (this.toEnter[i] != 0 || this.toExit[i] != 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public synchronized void incrementPassengers() {
