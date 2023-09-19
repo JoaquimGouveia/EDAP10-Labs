@@ -1,6 +1,5 @@
 package threads;
 import lift.LiftView;
-import lift.Passenger;
 
 public class LiftMonitor {
     private int[] toEnter; // Number of passengers waiting to enter the lift at each floor
@@ -45,7 +44,7 @@ public class LiftMonitor {
             wait();
         }
 
-        //lift waits while there are people entering or exiting the lift
+        //lift waits while there are people actually entering or exiting the lift
         while (this.enteringExitingCount != 0) {
             wait();
         }
@@ -75,29 +74,36 @@ public class LiftMonitor {
         notifyAll();
     }*/
 
+    /*handleEnter handles a passenger's waiting to enter the lift. 
+     It waits until the lift is at the same floor as the passenger, not moving and not full.
+    */
     public synchronized void handleEnter(int fromFloor, int toFloor) throws InterruptedException {
-        this.toEnter[fromFloor] = this.toEnter[fromFloor] + 1;
-        notifyAll(); //notifies the elevator that someone is waiting to enter
+        this.toEnter[fromFloor]+=1;
+        notifyAll(); //notifies the elevator that someone is waiting to enter, in this case notify() would suffice since only the lift thread is waiting
         while (this.currentFloor != fromFloor || this.isMoving || this.isFull) {
             wait();
         }
+        this.enteringExitingCount++;
         incrementPassengers();
         this.toEnter[fromFloor] = this.toEnter[fromFloor] - 1;
         this.toExit[toFloor] = this.toExit[toFloor] + 1;
-        this.enteringExitingCount++;
         notifyAll();
     }
 
+    /*handleExit handles a passenger's waiting to exit the lift.
+     It waits until the lift is at the same floor as the passenger and not moving.
+     */
     public synchronized void handleExit(int toFloor) throws InterruptedException {
         while (this.currentFloor != toFloor || this.isMoving) {
             wait();
         }
+        this.enteringExitingCount++;
         this.toExit[toFloor] = this.toExit[toFloor] - 1;
         decrementPassengers();
-        this.enteringExitingCount++;
         notifyAll();
     }
 
+    // Updates direction of the lift
     public synchronized int updateDirection() {
         if (this.currentFloor == 0 && this.currentDirection == -1) {
             this.currentDirection = 1;
@@ -107,6 +113,7 @@ public class LiftMonitor {
         return currentDirection;
     }
 
+    // Returns true if there is anyone waiting to enter the lift
     public synchronized boolean anyWaiting() {
         for (int i = 0; i < this.toEnter.length; i++) {
             if (this.toEnter[i] != 0 || this.toExit[i] != 0) {
@@ -116,6 +123,7 @@ public class LiftMonitor {
         return false;
     }
 
+    // increments number of passengers in lift, also checks for max capacity
     public synchronized void incrementPassengers() {
         this.nbrPassengers++;
         if (this.nbrPassengers == this.maxPassengers) {
@@ -123,11 +131,13 @@ public class LiftMonitor {
         }
     }
 
+    // decrements number of passengers in lift, thus setting isFull to false
     public synchronized void decrementPassengers() {
         this.nbrPassengers--;
         this.isFull = false;
     }
 
+    // decrements enteringExitingCount, notifying the lift to continue if == 0
     public synchronized void decrementEnteringExitingCount() {
         this.enteringExitingCount--;
         notifyAll();

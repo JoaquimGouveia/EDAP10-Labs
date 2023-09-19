@@ -6,7 +6,7 @@ import threads.PassengerThread;
 public class Main {
 
     public static void main(String[] args) {
-        final int NBR_FLOORS = 7, MAX_PASSENGERS = 8;
+        final int NBR_FLOORS = 7, MAX_PASSENGERS = 4;
 
         LiftView liftView = new LiftView(NBR_FLOORS, MAX_PASSENGERS);
         LiftMonitor liftMonitor = new LiftMonitor(NBR_FLOORS, MAX_PASSENGERS);

@@ -6,9 +6,6 @@ public class PassengerThread implements Runnable {
 
     private LiftView liftView;
     private LiftMonitor liftMonitor;
-    private Passenger passenger;
-    private int fromFloor;
-    private int toFloor;
 
     public PassengerThread(LiftView liftView, LiftMonitor liftMonitor) {
         this.liftView = liftView;
@@ -19,9 +16,9 @@ public class PassengerThread implements Runnable {
     public void run() {
         while (true) {
             try {
-                this.passenger = liftView.createPassenger();
-                this.fromFloor = passenger.getStartFloor();
-                this.toFloor = passenger.getDestinationFloor();
+                Passenger passenger = liftView.createPassenger();
+                int fromFloor = passenger.getStartFloor();
+                int toFloor = passenger.getDestinationFloor();
                 passenger.begin();
                 liftMonitor.handleEnter(fromFloor, toFloor);
                 passenger.enterLift();

@@ -18,7 +18,7 @@ public class LiftThread implements Runnable{
             try {
                 liftMonitor.handleFloor(currentFloor, lift);
                 int direction = liftMonitor.updateDirection();
-                int nextFloor = currentFloor + direction;
+                int nextFloor = this.currentFloor + direction;
                 lift.moveLift(currentFloor, nextFloor);
                 this.currentFloor = nextFloor;
             } catch (InterruptedException e) {
