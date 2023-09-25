@@ -1,10 +1,13 @@
 import java.math.BigInteger;
 
+import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 
+import client.view.ProgressItem;
 import client.view.StatusWindow;
+import client.view.WorklistItem;
 import network.Sniffer;
 import network.SnifferCallback;
 
@@ -47,6 +50,16 @@ public class CodeBreaker implements SnifferCallback {
     /** Called by a Sniffer thread when an encrypted message is obtained. */
     @Override
     public void onMessageIntercepted(String message, BigInteger n) {
-        System.out.println("message intercepted (N=" + n + ")...");
+        SwingUtilities.invokeLater(() -> {
+            WorklistItem workItem = new WorklistItem(n, message);
+            JButton breakButton = new JButton("Break");
+            breakButton.addActionListener(e -> {
+                ProgressItem progressItem = new ProgressItem(n, message);
+                progressList.add(progressItem);
+                workList.remove(workItem);
+            });
+            workItem.add(breakButton);
+            workList.add(workItem);
+        });
     }
 }

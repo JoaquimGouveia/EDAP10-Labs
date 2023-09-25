@@ -38,7 +38,7 @@ public class Crypto {
         BigInteger q1 = q.subtract(BigInteger.ONE);
         BigInteger lambda = p1.multiply(q1).divide(p1.gcd(q1));
 
-        d = PUBLIC_KEY_E.modInverse(lambda);
+        d = PUBLIC_KEY_E.modInverse(lambda);    
     }
     
     /** Use new pair of random, prime integers (encryption). */
