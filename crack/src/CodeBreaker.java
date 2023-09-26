@@ -5,6 +5,7 @@ import java.util.concurrent.Executors;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import client.view.ProgressItem;
@@ -62,24 +63,41 @@ public class CodeBreaker implements SnifferCallback {
                 ProgressItem progressItem = new ProgressItem(n, message);
                 progressList.add(progressItem);
                 workList.remove(workItem);
-                ProgressTracker tracker = new Tracker();
+                ProgressTracker tracker = new Tracker(progressItem);
                 Runnable task = () -> {
                     try {
-                        Factorizer.crack(message,n,tracker);
+                        String decryptedMessage = Factorizer.crack(message,n,tracker);
+                        SwingUtilities.invokeLater(() -> {
+                            progressItem.getTextArea().setText(decryptedMessage);
+                            JButton removeButton = new JButton("Remove");
+                            removeButton.addActionListener(d -> {
+                                progressList.remove(progressItem);
+                                mainProgressBar.setValue(mainProgressBar.getValue() - 1_000_000);
+                                this.mainProgressBar.setMaximum(this.mainProgressBar.getMaximum() - 1_000_000);
+                            });
+                            progressItem.add(removeButton);
+                        });
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
                 };
                 pool.submit(task);
+                this.mainProgressBar.setMaximum(this.mainProgressBar.getMaximum() + 1_000_000);
             });
+            
             workItem.add(breakButton);
             workList.add(workItem);
         });
     }
 
     /** ProgressTracker: reports how far factorization has progressed */ 
-    private static class Tracker implements ProgressTracker {
-        private int totalProgress = 0;
+    private class Tracker implements ProgressTracker {
+        //private int totalProgress = 0;
+        private ProgressItem progressItem;
+        
+        public Tracker(ProgressItem progressItem) {
+            this.progressItem = progressItem;
+        }
 
         /**
          * Called by Factorizer to indicate progress. The total sum of
@@ -90,8 +108,13 @@ public class CodeBreaker implements SnifferCallback {
          */
         @Override
         public void onProgress(int ppmDelta) {
-            totalProgress += ppmDelta;
-            System.out.println("progress = " + totalProgress + "/1000000");
+            SwingUtilities.invokeLater(() -> {
+                JProgressBar progressBar = progressItem.getProgressBar();
+                progressBar.setValue(progressBar.getValue() + ppmDelta);
+                mainProgressBar.setValue(mainProgressBar.getValue() + ppmDelta);
+            });
+            //totalProgress += ppmDelta;
+            //System.out.println("progress = " + totalProgress + "/1000000");
         }
     }
 }
