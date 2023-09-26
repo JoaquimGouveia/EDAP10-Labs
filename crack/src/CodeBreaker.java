@@ -86,7 +86,7 @@ public class CodeBreaker implements SnifferCallback {
                         System.out.println("Interrupted");
                     }
                 };
-                Future<?> future = pool.submit(task);
+                Future<?> future = threadPool.submit(task);
                 cancelButton.addActionListener(f -> {
                     future.cancel(true);
                     progressItem.getTextArea().setText("Cancelled");
@@ -106,7 +106,6 @@ public class CodeBreaker implements SnifferCallback {
 
     /** ProgressTracker: reports how far factorization has progressed */ 
     private class Tracker implements ProgressTracker {
-        //private int totalProgress = 0;
         private JProgressBar progressBar;
         
         public Tracker(JProgressBar progressBar) {
@@ -127,8 +126,6 @@ public class CodeBreaker implements SnifferCallback {
                 progressBar.setValue(progressBar.getValue() + ppmDelta1);
                 mainProgressBar.setValue(mainProgressBar.getValue() + ppmDelta1);
             });
-            //totalProgress += ppmDelta;
-            //System.out.println("progress = " + totalProgress + "/1000000");
         }
     }
 }
