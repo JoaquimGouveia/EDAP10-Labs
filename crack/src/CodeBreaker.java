@@ -1,6 +1,7 @@
 import java.math.BigInteger;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -18,6 +19,8 @@ import rsa.ProgressTracker;
 
 public class CodeBreaker implements SnifferCallback {
 
+    private ExecutorService threadPool;
+
     private final JPanel workList;
     private final JPanel progressList;
     
@@ -27,10 +30,12 @@ public class CodeBreaker implements SnifferCallback {
     
     private CodeBreaker() {
         StatusWindow w  = new StatusWindow();
+        this.threadPool = Executors.newFixedThreadPool(2);
 
         workList        = w.getWorkList();
         progressList    = w.getProgressList();
         mainProgressBar = w.getProgressBar();
+        w.enableErrorChecks();
     }
     
     // -----------------------------------------------------------------------
@@ -55,15 +60,15 @@ public class CodeBreaker implements SnifferCallback {
     /** Called by a Sniffer thread when an encrypted message is obtained. */
     @Override
     public void onMessageIntercepted(String message, BigInteger n) {
-        ExecutorService pool = Executors.newFixedThreadPool(2);
         SwingUtilities.invokeLater(() -> {
             WorklistItem workItem = new WorklistItem(n, message);
             JButton breakButton = new JButton("Break");
+            JButton cancelButton = new JButton("Cancel");
             breakButton.addActionListener(e -> {
                 ProgressItem progressItem = new ProgressItem(n, message);
                 progressList.add(progressItem);
                 workList.remove(workItem);
-                ProgressTracker tracker = new Tracker(progressItem);
+                ProgressTracker tracker = new Tracker(progressItem.getProgressBar());
                 Runnable task = () -> {
                     try {
                         String decryptedMessage = Factorizer.crack(message,n,tracker);
@@ -78,13 +83,22 @@ public class CodeBreaker implements SnifferCallback {
                             progressItem.add(removeButton);
                         });
                     } catch (InterruptedException e1) {
-                        e1.printStackTrace();
+                        System.out.println("Interrupted");
                     }
                 };
-                pool.submit(task);
+                Future<?> future = pool.submit(task);
+                cancelButton.addActionListener(f -> {
+                    future.cancel(true);
+                    progressItem.getTextArea().setText("Cancelled");
+                    int processedPPM = progressItem.getProgressBar().getValue();
+                    int remainingPPM = 1_000_000 - processedPPM;
+                    mainProgressBar.setValue(mainProgressBar.getValue() + remainingPPM);
+                    progressItem.getProgressBar().setValue(1_000_000);
+                    progressItem.remove(cancelButton);
+                });
+                progressItem.add(cancelButton);
                 this.mainProgressBar.setMaximum(this.mainProgressBar.getMaximum() + 1_000_000);
             });
-            
             workItem.add(breakButton);
             workList.add(workItem);
         });
@@ -93,10 +107,10 @@ public class CodeBreaker implements SnifferCallback {
     /** ProgressTracker: reports how far factorization has progressed */ 
     private class Tracker implements ProgressTracker {
         //private int totalProgress = 0;
-        private ProgressItem progressItem;
+        private JProgressBar progressBar;
         
-        public Tracker(ProgressItem progressItem) {
-            this.progressItem = progressItem;
+        public Tracker(JProgressBar progressBar) {
+            this.progressBar = progressBar;
         }
 
         /**
@@ -108,10 +122,10 @@ public class CodeBreaker implements SnifferCallback {
          */
         @Override
         public void onProgress(int ppmDelta) {
+            int ppmDelta1 = Math.min(ppmDelta, 1_000_000 - progressBar.getValue());
             SwingUtilities.invokeLater(() -> {
-                JProgressBar progressBar = progressItem.getProgressBar();
-                progressBar.setValue(progressBar.getValue() + ppmDelta);
-                mainProgressBar.setValue(mainProgressBar.getValue() + ppmDelta);
+                progressBar.setValue(progressBar.getValue() + ppmDelta1);
+                mainProgressBar.setValue(mainProgressBar.getValue() + ppmDelta1);
             });
             //totalProgress += ppmDelta;
             //System.out.println("progress = " + totalProgress + "/1000000");

@@ -60,6 +60,7 @@ public class Factorizer {
             if (Thread.interrupted()) {
                 throw new InterruptedException("crack() was cancelled (interrupted)");
             }
+            
         }
 
         primeFactors.add(n);
