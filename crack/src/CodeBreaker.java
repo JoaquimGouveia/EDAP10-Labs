@@ -6,7 +6,6 @@ import java.util.concurrent.Future;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import client.view.ProgressItem;
