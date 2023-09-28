@@ -23,42 +23,77 @@ public class SpinController extends ActorThread<WashingMessage> {
 
             while (true) {
                 // wait for up to a (simulated) minute for a WashingMessage
-                WashingMessage message = receiveWithTimeout(60000 / Settings.SPEEDUP);
+                WashingMessage message = receive();
+                while (message != null) {
+                    ActorThread<WashingMessage> sender = message.sender();
+                    if (message.order() == Order.SPIN_OFF) {
+                        washingIO.setSpinMode(Spin.IDLE);
+                        sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
+                        message = null;
+                        break;
+                    }
+
+                    if (message.order() == Order.SPIN_FAST) {
+                        washingIO.setSpinMode(Spin.FAST);
+                        sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
+                        message = null;
+                        break;
+                    }
+
+                    if (message.order() == Order.SPIN_SLOW) {
+                        sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
+                        while (true) {
+                            washingIO.setSpinMode(Spin.LEFT);
+                            message = receiveWithTimeout(60000 / Settings.SPEEDUP);
+                            if (message != null && message.order() != Order.SPIN_SLOW) {
+                                break;
+                            }
+                            washingIO.setSpinMode(Spin.RIGHT);
+                            message = receiveWithTimeout(60000 / Settings.SPEEDUP);
+                            if (message != null && message.order() != Order.SPIN_SLOW) {
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 // if m is null, it means a minute passed and no message was received
-                if (message != null) {
-                    ActorThread<WashingMessage> sender = message.sender();
-                    Order order = message.order();
 
                     /*When SpinController receives a SPIN_SLOW message, the barrel should alternate between 
                     slow left rotation and slow right rotation, changing direction every minute.
                     When SpinController receives a SPIN_FAST message, the barrel should rotate fast (centrifuge).
                     When SpinController receives a SPIN_OFF message, barrel rotation should stop */
-                    switch (order) {
+                    /*switch (order) {
                         case SPIN_SLOW:
                             sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
                             while (true) {
                                 washingIO.setSpinMode(Spin.LEFT);
                                 message = receiveWithTimeout(60000 / Settings.SPEEDUP);
                                 if (message != null && message.order() != Order.SPIN_SLOW) {
+                                    order = message.order();
                                     break;
                                 }
                                 washingIO.setSpinMode(Spin.RIGHT);
                                 message = receiveWithTimeout(60000 / Settings.SPEEDUP);
                                 if (message != null && message.order() != Order.SPIN_SLOW) {
+                                    
                                     break;
                                 }
                             }
+                            break;
                         case SPIN_FAST:
                             washingIO.setSpinMode(Spin.FAST);
                             sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
+                            break;
                         case SPIN_OFF:
                             washingIO.setSpinMode(Spin.IDLE);
+                            System.out.println("hej");
                             sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
+                            break;
                         default:
                             break;
                     }
-                }
+                }*/
 
                 // ... TODO ...
             }

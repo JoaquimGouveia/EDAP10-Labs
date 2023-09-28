@@ -26,12 +26,30 @@ public class WaterController extends ActorThread<WashingMessage> {
                             washingIO.drain(false);
                             washingIO.fill(false);
                             sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
+                            break;
                         case WATER_FILL:
+                            washingIO.drain(false);
                             washingIO.fill(true);
+                            
+                            while (washingIO.getWaterLevel() < 10) {
+                                message = receiveWithTimeout(200 / Settings.SPEEDUP);
+                                if (message != null && message.order() != Order.WATER_FILL) {
+                                    break;
+                                }
+                            }
+                            washingIO.fill(false);
                             sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
+                            break;
                         case WATER_DRAIN:
                             washingIO.drain(true);
+                            while (washingIO.getWaterLevel() > 0) {
+                                message = receiveWithTimeout(200 / Settings.SPEEDUP);
+                                if (message != null && message.order() != Order.WATER_DRAIN) {
+                                    break;
+                                }
+                            }
                             sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
+                            break;
                         default:
                             break;
                     }

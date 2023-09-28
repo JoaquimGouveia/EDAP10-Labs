@@ -12,7 +12,6 @@ public class ActorThread<M> extends Thread {
         if (message != null) {
             queue.add(message);
         }
-        queue.add(message);
     }
     
     /** Returns the first message in the queue, or blocks if none available. */

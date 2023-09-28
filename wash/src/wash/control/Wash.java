@@ -2,8 +2,6 @@ package wash.control;
 
 import wash.io.WashingIO;
 import wash.simulation.WashingSimulator;
-import wash.control.WashingProgram3;
-import wash.control.WashingProgram1;
 
 public class Wash {
 
@@ -28,21 +26,24 @@ public class Wash {
             switch (n) {
                 case 0: 
                     currentThread.interrupt();
-                
+                    break;
                 case 1: 
                     currentThread = new WashingProgram1(io, temp, water, spin);
                     currentThread.start();
-
+                    break;
+                case 2: 
+                    currentThread = new WashingProgram2(io, temp, water, spin);
+                    currentThread.start();
+                    break;
                 case 3: 
                     currentThread = new WashingProgram3(io, temp, water, spin);
                     currentThread.start();
-            }
+                    break;
+                default:
+                    break;
+            }   
 
             System.out.println("user selected program " + n);
-
-            // TODO:
-            // if the user presses buttons 1-3, start a washing program
-            // if the user presses button 0, and a program has been started, stop it
         }
     }
 };
