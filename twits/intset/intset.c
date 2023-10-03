@@ -14,6 +14,7 @@ struct intset {
   int size;
   int allocated;
   int *data;
+  pthread_mutex_t mutex;
 };
 
 // special value indicating a free array element
@@ -38,6 +39,10 @@ intset_create()
   for (int i = 0; i < s->allocated; i++) {
     s->data[i] = EMPTY_SLOT;
   }
+  if(pthread_mutex_init(&s->mutex, NULL) != 0) {
+    perror("pthread_mutex_init");
+    exit(1);
+  }
 
   return s;
 }
@@ -47,6 +52,7 @@ intset_create()
 // local function: return hash index for a
 static int
 index(struct intset *s, int a)
+
 {
   return abs(a % s->allocated);
 }
@@ -78,6 +84,7 @@ find(struct intset *s, int a)
 bool
 intset_add(struct intset *s, int a)
 {
+  pthread_mutex_lock(&s->mutex);
   // rehash if more than 70% is used
   if (s->size >= s->allocated * 7 / 10) {
     int old_allocated = s->allocated;
@@ -109,12 +116,14 @@ intset_add(struct intset *s, int a)
 
   int idx = find(s, a);
   if (s->data[idx] == a) {
+    pthread_mutex_unlock(&s->mutex);
     return false;
   }
 
   s->data[idx] = a;
   s->size++;
-
+  
+  pthread_mutex_unlock(&s->mutex);
   return true;
 }
 
@@ -123,10 +132,12 @@ intset_add(struct intset *s, int a)
 bool
 intset_contains(struct intset *s, int a)
 {
+  pthread_mutex_lock(&s->mutex);
   // use private helper function above
   int idx = find(s, a);
   bool found = (s->data[idx] == a);
 
+  pthread_mutex_unlock(&s->mutex);
   return found;
 }
 
@@ -135,7 +146,9 @@ intset_contains(struct intset *s, int a)
 int
 intset_size(struct intset *s)
 {
+  pthread_mutex_lock(&s->mutex);
   int sz = s->size;
 
+  pthread_mutex_unlock(&s->mutex);
   return sz;
 }
