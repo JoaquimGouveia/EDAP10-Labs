@@ -28,6 +28,7 @@ public class TemperatureController extends ActorThread<WashingMessage> {
                         case TEMP_IDLE:
                             targetTemp = 20;
                             isTempReached = false;
+                            washingIO.heat(false);
                             this.sender.send(new WashingMessage(this, Order.ACKNOWLEDGMENT));
                             break;
                         case TEMP_SET_40:
